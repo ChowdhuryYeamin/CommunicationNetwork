@@ -1,5 +1,7 @@
 import networkx as nx
 import random
+import matplotlib.pyplot as plt
+import time
 
 # Step 1: Ask the user for the number of nodes
 num_nodes = int(input("Enter the number of nodes: "))
@@ -38,5 +40,14 @@ while True:
     
     # Step 9: Update the timer and continue sending packets
     timer += 1
+    
+    # Step 10: Draw the graph with the packets being sent between the nodes
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True, font_weight='bold')
+    labels = {(i, j): random.randint(1, 100) for i in range(num_nodes) for j in range(num_nodes) if i != j}
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+    plt.title("Time: {} seconds".format(timer))
+    plt.pause(0.5)
+    plt.clf()
     
 print("The graph was online for {} seconds.".format(timer))
