@@ -11,6 +11,8 @@ G = nx.complete_graph(num_nodes)
 for i in range(num_nodes):
     G.add_node(i, energy=200, packets_to_send=0, packets_received=0)
 
+print(G)
+
 #Ask the user for source and destination nodes
 src = int(input("Enter the source node: "))
 dest = int(input("Enter the destination node: "))
@@ -25,7 +27,7 @@ timer = 0
 while True:
     # Step 6: Use a shortest path algorithm to find the shortest path
     try:
-        path = nx.shortest_path(G, source=src, target=dest, method="dijkstra")
+        path = nx.shortest_path(G, source=src, target=dest)
         #print each node in the path
         print("The path is: ")
         for i in range(len(path)):
@@ -51,7 +53,6 @@ while True:
             print("Node {} has failed.".format(u))
             
 
-    
     # Step 8: Keep sending packets until the energy runs out
     if not nx.has_path(G, source=src, target=dest):
         print("No path exists between the source and destination nodes.")
@@ -70,11 +71,7 @@ while True:
             w = path[j]
             G.nodes[w]["energy"] -= 20
             
-   
-
-
-
-    
+       
     # Step 10: Draw the graph with the packets being sent between the nodes
     pos = nx.spring_layout(G)
     nx.draw(G, pos, with_labels=True, font_weight='bold')
