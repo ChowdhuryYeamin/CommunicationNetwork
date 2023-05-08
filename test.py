@@ -2,22 +2,23 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# Step 1: Ask the user for the number of nodes
-num_nodes = int(input("Enter the number of nodes: "))
 
-# Step 2: Create a directed graph with the given number of nodes
-G = nx.DiGraph()
+edges = [
+    (3, 2, {"weight": 19}),
+    (3, 1, {"weight": 7}),
+    (1, 2, {"weight": 9}),
+    
+]
+edge_labels = {
+    (3, 2): 19,
+    (3, 1): 7,
+    (1, 2): 9,
+}
 
-# Add nodes to the graph with energy levels of 200
-for i in range(num_nodes):
+G = nx.Graph()
+for i in range(1, 5):
     G.add_node(i, energy=200)
-   
-# Add edges to the graph with random weights between 5 and 20
-for u in range(num_nodes):
-    for v in range(num_nodes):
-        if u != v and random.random() < 0.5:
-            w = random.randint(5, 20)
-            G.add_edge(u, v, weight=w)
+G.add_edges_from(edges)
 
 # Step 3: Display the initial graph with node energies as labels
 pos = nx.spring_layout(G)
@@ -39,7 +40,9 @@ total_energy_before = sum(node_energy.values())
 print(f"Total energy of nodes before sending packets: {total_energy_before}")
 
 # Send packets between src and dest
-path = nx.dijkstra_path(G, src_node, dest_node, weight='weight')
+print(G)
+
+path = nx.shortest_path(G, src_node, dest_node, weight="weight", method="dijkstra")
 
 for i in range(num_packets):
     for j in range(len(path)-1):
@@ -57,7 +60,7 @@ for i in range(num_packets):
         # Packet reached destination successfully
         print(f"Packet {i+1} reached the destination through path {path}")
         # Find a new path for the next packet
-        path = nx.dijkstra_path(G, src_node, dest_node)
+        path = nx.shortest_path(G, src_node, dest_node, weight="weight", method="dijkstra")
         continue
 
     # Packet encountered a node with zero energy and did not reach destination
