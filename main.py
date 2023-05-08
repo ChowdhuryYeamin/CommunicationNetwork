@@ -1,41 +1,81 @@
-from node import Node
-from graph import Graph
+import random
+import networkx as nx
+import matplotlib.pyplot as plt
 
-def main():
+# Step 2: Create a graph with random edges
+num_nodes = int(input("Enter the number of nodes: "))
+G = nx.Graph()
+for i in range(1, num_nodes+1):
+    G.add_node(i, energy=200)
+for i in range(1, num_nodes+1):
+    for j in range(i+1, num_nodes+1):
+        if random.random() < 0.5:
+            weight = random.randint(5, 20)
+            G.add_edge(i, j, weight=weight)
 
-    number_of_nodes = int(input())
-    for i in range(0, number_of_nodes):
-        node_id, energy, packets_to_send = input().split()
-        while len(node_id) == 0 or len(energy) == 0 or len(packets_to_send) == 0:
-            node_id, energy, packets_to_send = input().split()
-        energy = int(energy)
-        packets_to_send = int(packets_to_send)
-        graph.add_node(node_id, energy, packets_to_send)
-   
+# Step 3: Display the initial graph with node energies as labels
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, font_weight='bold')
+node_energy = nx.get_node_attributes(G, 'energy')
+nx.draw_networkx_labels(G, pos, labels={n: f"Energy: {node_energy[n]}" for n in G.nodes()}, font_color='red')
 
-    number_of_edges = int(input())
-    while number_of_edges < number_of_nodes - 1:
-        number_of_edges = int(input())
+edge_labels = nx.get_edge_attributes(G, 'weight')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+plt.show()
 
+# Step 4: Ask the user for the source and destination nodes and the number of packets to send
+src_node = int(input("Enter the source node: "))
+dest_node = int(input("Enter the destination node: "))
+num_packets = int(input("Enter the number of packets to send: "))
 
-    for i in range(0, number_of_edges):
-        node1_id, node2_id, distance = input().split()
-        while len(node1_id) == 0 or len(node2_id) == 0 or len(distance) == 0:
-            node1_id, node2_id, distance = input().split()
-        distance = int(distance)
-        graph.add_edge(node1_id, node2_id, distance)
+# Print total energy of nodes before sending packets
+total_energy_before = sum(node_energy.values())
+print(f"Total energy of nodes before sending packets: {total_energy_before}")
 
-    #accoridng to the most energy, sorts the nodes in descending order
-    #according to the list of energy, gets the ids of the nodes in order
+# Send packets between src and dest
+energyy = 0
+H = G.copy()
+path_true = True
+path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+num_sent = 0
+for i in range(num_packets):
+    path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+    if nx.has_path(H, src_node, dest_node):
+        for j in range(len(path)-1):
+            u, v = path[j], path[j+1]
+            H.nodes[u]['energy'] -= H[u][v]['weight']
 
-    list_of_order = []
-    for node in graph.nodes:
-        list_of_order.append(graph.nodes[node])
-   
-    list_of_order.sort(key=lambda x: x.energy, reverse=True)
-    list_of_order = [node.id for node in list_of_order]
+        for j in range(len(path)-1):
+            u, v = path[j], path[j+1]
+            if H.nodes[u]['energy'] < 0:
+                path_true = False
+                H.nodes[u]['energy'] += H[u][v]['weight']
+                H[u][v]['weight'] = 100000
+        if not path_true:
+            path_true = True
+            path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+        else:
+            num_sent += 1
+            print(path)
+    else:
+        print("There is no path between the source and destination nodes.")
+        break
 
+    
+  
+           
+node_energy = nx.get_node_attributes(H, 'energy')
+total_energy_after = sum(node_energy.values())
+print(f"Total energy of nodes after sending packets: {total_energy_after}")
 
-     
-if __name__ == "__main__":
-    main()
+print("Packets sent before all paths with avaiable energy is exhausted:" , num_sent)
+# Step 7: Display the final graph with node energies as labels
+pos = nx.spring_layout(H)
+nx.draw(H, pos, with_labels=True, font_weight='bold')
+node_energy = nx.get_node_attributes(H, 'energy')
+nx.draw_networkx_labels(H, pos, labels={n: f"Energy: {node_energy[n]}" for n in H.nodes()}, font_color='red')
+
+edge_labels = nx.get_edge_attributes(H, 'weight')
+nx.draw_networkx_edge_labels(H, pos, edge_labels=edge_labels)
+plt.show()
+
