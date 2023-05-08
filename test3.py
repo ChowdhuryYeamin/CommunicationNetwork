@@ -122,8 +122,8 @@ for i in range(num_packets):
     if energy_remaining <= 0:
         break
 
-# Step 6: Remove nodes with zero energy from the graph
-F.remove_nodes_from([n for n, d in F.nodes(data=True) if d['energy'] <= 0])
+    # Step 6: Remove nodes with zero energy from the graph
+    F.remove_nodes_from([n for n, d in F.nodes(data=True) if d['energy'] <= 0])
 
 # Step 7: Display the final graph with node energies as labels
 pos = nx.spring_layout(F)
