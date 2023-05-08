@@ -1,53 +1,57 @@
+import sys
+import timeit
 import networkx as nx
-import random
 import matplotlib.pyplot as plt
-import time
+from random import randint
 
-# Step 1: Ask the user for the number of nodes
-num_nodes = int(input("Enter the number of nodes: "))
+# Define function to generate a random graph
+def generate_random_graph(num_nodes, num_edges):
+    G = nx.Graph()
+    nodes = range(1, num_nodes+1)
+    G.add_nodes_from(nodes)
+    while G.number_of_edges() < num_edges:
+        node1 = randint(1, num_nodes)
+        node2 = randint(1, num_nodes)
+        if node1 != node2:
+            weight = randint(1, 10)
+            G.add_edge(node1, node2, weight=weight)
+    return G
 
-# Step 2: Create a graph with the given number of nodes
-G = nx.complete_graph(num_nodes)
+# Define function to compute energy of a graph
+def compute_energy(G):
+    energy = 0
+    for node1, node2 in G.edges():
+        weight = G[node1][node2]['weight']
+        energy += weight
+    return energy
 
-# Step 3: Ask the user for the source and destination nodes
-src = int(input("Enter the source node: "))
-dest = int(input("Enter the destination node: "))
+# Generate a random graph
+num_nodes = 10
+num_edges = 20
+G = generate_random_graph(num_nodes, num_edges)
 
-# Step 4: Initialize a timer variable
-timer = 0
+# Compute energy of initial graph
+initial_energy = compute_energy(G)
+print("Initial Energy: ", initial_energy)
 
-# Step 5: Start sending packets between the source and destination nodes
-while True:
-    # Step 6: Use a shortest path algorithm to find the shortest path
-    try:
-        path = nx.shortest_path(G, source=src, target=dest)
-    except nx.NetworkXNoPath:
-        print("No path exists between the source and destination nodes.")
-        break
-    
-    # Step 7: If any node fails, try to reroute the packets
-    for i in range(len(path)-1):
-        u = path[i]
-        v = path[i+1]
-        if random.random() < 0.1:
-            G.remove_edge(u, v)
-            print("Edge ({}, {}) has failed.".format(u, v))
-    
-    # Step 8: Keep sending packets until the energy runs out
-    if not nx.has_path(G, source=src, target=dest):
-        print("No path exists between the source and destination nodes.")
-        break
-    
-    # Step 9: Update the timer and continue sending packets
-    timer += 1
-    
-    # Step 10: Draw the graph with the packets being sent between the nodes
-    pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True, font_weight='bold')
-    labels = {(i, j): random.randint(1, 100) for i in range(num_nodes) for j in range(num_nodes) if i != j}
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
-    plt.title("Time: {} seconds".format(timer))
-    plt.pause(0.5)
-    plt.clf()
-    
-print("The graph was online for {} seconds.".format(timer))
+# Run Brute Force Algorithm
+start = timeit.default_timer()
+brute_force_energy = sys.maxsize
+for path in nx.all_simple_paths(G, source=1, target=num_nodes):
+    path_energy = sum([G[path[i]][path[i+1]]['weight'] for i in range(len(path)-1)])
+    if path_energy < brute_force_energy:
+        brute_force_energy = path_energy
+stop = timeit.default_timer()
+print("Brute Force Energy: ", brute_force_energy)
+print("Brute Force Time: ", stop - start)
+
+# Run Dijkstra's Algorithm
+start = timeit.default_timer()
+dijkstra_energy = nx.shortest_path_length(G, source=1, target=num_nodes, weight='weight')
+stop = timeit.default_timer()
+print("Dijkstra's Energy: ", dijkstra_energy)
+print("Dijkstra's Time: ", stop - start)
+
+# Compute final energy of graph
+final_energy = compute_energy(G)
+print("Final Energy: ", final_energy)
