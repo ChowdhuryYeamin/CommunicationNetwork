@@ -2,14 +2,16 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# Step 2: Create a graph with random edges
+# Step 1: Ask the user for the number of nodes
 num_nodes = int(input("Enter the number of nodes: "))
-G = nx.Graph()
+
+# Step 2: Create a graph with random edges
+G = nx.DiGraph()
 for i in range(1, num_nodes+1):
     G.add_node(i, energy=200)
 for i in range(1, num_nodes+1):
-    for j in range(i+1, num_nodes+1):
-        if random.random() < 0.5:
+    for j in range(1, num_nodes+1):
+        if i != j and random.random() < 0.5:
             weight = random.randint(5, 20)
             G.add_edge(i, j, weight=weight)
 
@@ -33,27 +35,22 @@ total_energy_before = sum(node_energy.values())
 print(f"Total energy of nodes before sending packets: {total_energy_before}")
 
 # Send packets between src and dest
-print(G)
-
-path = nx.shortest_path(G, src_node, dest_node, weight="weight", method="dijkstra")
-
 for i in range(num_packets):
+    path = nx.shortest_path(G, src_node, dest_node, weight="weight", method="dijkstra")
     for j in range(len(path)-1):
         u, v = path[j], path[j+1]
         if G.nodes[u]['energy'] - G[u][v]['weight'] < 0:
-            # Avoid the node with zero energy by setting the weights of all connected edges to infinity
-            for x in G.neighbors(u):
+            # Avoid the node with zero energy by setting the weights of all outgoing edges to infinity
+            for x in G.successors(u):
                 G[u][x]['weight'] = 100000000
             print(f"Node {u} has run out of energy and will be avoided.")
             break
         else:
-            print(u , " : " , v , " : " , G[u][v]['weight'])
+            print(u , " -> " , v , " : " , G[u][v]['weight'])
             G.nodes[u]['energy'] -= G[u][v]['weight']
     else:
         # Packet reached destination successfully
         print(f"Packet {i+1} reached the destination through path {path}")
-        # Find a new path for the next packet
-        path = nx.shortest_path(G, src_node, dest_node, weight="weight", method="dijkstra")
         continue
 
     # Packet encountered a node with zero energy and did not reach destination
@@ -71,6 +68,3 @@ nx.draw_networkx_labels(G, pos, labels={n: f"Energy: {node_energy[n]}" for n in 
 
 edge_labels = nx.get_edge_attributes(G, 'weight')
 nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-plt.show()
-
-
