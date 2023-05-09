@@ -32,14 +32,18 @@ num_packets = int(input("Enter the number of packets to send: "))
 total_energy_before = sum(node_energy.values())
 print(f"Total energy of nodes before sending packets: {total_energy_before}")
 
+
+print("Dijkstra:\n")
 # Send packets between src and dest
-energyy = 0
 H = G.copy()
 path_true = True
 path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
 num_sent = 0
 for i in range(num_packets):
-    path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+    if not nx.has_path(H, src_node, dest_node):
+        print("There is no path between the source and destination nodes.")
+    else:
+        path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
     if nx.has_path(H, src_node, dest_node):
         for j in range(len(path)-1):
             u, v = path[j], path[j+1]
@@ -53,7 +57,10 @@ for i in range(num_packets):
                 H[u][v]['weight'] = 100000
         if not path_true:
             path_true = True
-            path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+            if not nx.has_path(H, src_node, dest_node):
+                print("There is no path between the source and destination nodes.")
+            else:
+                path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
         else:
             num_sent += 1
             print(path)
@@ -78,52 +85,55 @@ edge_labels = nx.get_edge_attributes(H, 'weight')
 nx.draw_networkx_edge_labels(H, pos, edge_labels=edge_labels)
 plt.show()
 
-print("greedy: \n")
 
-# Send packets between src and dest
+print("Greedy:\n")
 
-path_true = True
-path = [src_node]
-num_sent = 0
-while path[-1] != dest_node and len(path) > 0:
-    curr_node = path[-1]
-    outgoing_edges = G.edges(curr_node)
-    if len(outgoing_edges) > 0:
-        chosen_edge = None
-        chosen_edge_weight = float('inf')
-        for u, v in outgoing_edges:
-            edge_weight = G[u][v]['weight']
-            if edge_weight < chosen_edge_weight:
-                chosen_edge = (u, v)
-                chosen_edge_weight = edge_weight
-        if chosen_edge_weight < float('inf'):
-            path.append(chosen_edge[1])
-            G.nodes[chosen_edge[0]]['energy'] -= chosen_edge_weight
-            G[chosen_edge[0]][chosen_edge[1]]['weight'] = 100000
-            num_sent += 1
+
+if nx.has_path(G, src_node, dest_node):
+    print("The path exists")
+    paths = list(nx.all_simple_paths(G, source=src_node, target=dest_node))
+    num_sent =0 
+    path_true = True
+    for i in range(num_packets):
+        path = random.choice(paths)
+        if nx.has_path(G, src_node, dest_node):
+            for j in range(len(path)-1):
+                u, v = path[j], path[j+1]
+                G.nodes[u]['energy'] -= G[u][v]['weight']
+
+            for j in range(len(path)-1):
+                u, v = path[j], path[j+1]
+                if G.nodes[u]['energy'] < 0:
+                    path_true = False
+                    G.nodes[u]['energy'] += G[u][v]['weight']
+                    G[u][v]['weight'] = 100000
+            if not path_true:
+                path_true = True
+                if not nx.has_path(G, src_node, dest_node):
+                    print("There is no path between the source and destination nodes.")
+                else:
+                   filtered_paths = [p for p in paths if p != path]
+                   random_path = random.choice(filtered_paths)
+            else:
+                num_sent += 1
+                print(path)
         else:
-            path.pop()
-    else:
-        path.pop()
+            print("There is no path between the source and destination nodes.")
+            break
+               
+    node_energy = nx.get_node_attributes(G, 'energy')
+    total_energy_after = sum(node_energy.values())
+    print(f"Total energy of nodes after sending packets: {total_energy_after}")
 
-if path[-1] == dest_node:
-    print(path)
+    print("Packets sent before all paths with avaiable energy is exhausted:" , num_sent)
+    # Step 7: Display the final graph with node energies as labels
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True, font_weight='bold')
+    node_energy = nx.get_node_attributes(G, 'energy')
+    nx.draw_networkx_labels(G, pos, labels={n: f"Energy: {node_energy[n]}" for n in G.nodes()}, font_color='red')
+
+    edge_labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+    plt.show()
 else:
     print("There is no path between the source and destination nodes.")
-
-# Calculate total energy after sending packets
-node_energy = nx.get_node_attributes(G, 'energy')
-total_energy_after = sum(node_energy.values())
-print(f"Total energy of nodes after sending packets: {total_energy_after}")
-
-print("Packets sent before all paths with available energy are exhausted:", num_sent)
-
-# Step 7: Display the final graph with node energies as labels
-pos = nx.spring_layout(G)
-nx.draw(G, pos, with_labels=True, font_weight='bold')
-node_energy = nx.get_node_attributes(G, 'energy')
-nx.draw_networkx_labels(G, pos, labels={n: f"Energy: {node_energy[n]}" for n in G.nodes()}, font_color='red')
-
-edge_labels = nx.get_edge_attributes(G, 'weight')
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-plt.show()
