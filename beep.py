@@ -36,42 +36,29 @@ print(f"Total energy of nodes before sending packets: {total_energy_before} joul
 
 
 print("Dijkstra:\n")
-# Send packets between src and dest
 H = G.copy()
 path_true = True
-path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
 num_sent = 0
-for i in range(num_packets):
-    if not nx.has_path(H, src_node, dest_node):
-        print("There is no path between the source and destination nodes.")
-    else:
-        path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
-    if nx.has_path(H, src_node, dest_node):
-        for j in range(len(path)-1):
-            u, v = path[j], path[j+1]
-            H.nodes[u]['energy'] -= H[u][v]['weight']
 
-        for j in range(len(path)-1):
-            u, v = path[j], path[j+1]
-            if H.nodes[u]['energy'] < 0:
-                path_true = False
-                H.nodes[u]['energy'] += H[u][v]['weight']
-                H[u][v]['weight'] = 100000
-        if not path_true:
-            path_true = True
-            if not nx.has_path(H, src_node, dest_node):
-                print("There is no path between the source and destination nodes.")
-            else:
-                path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
-        else:
-            num_sent += 1
-            print(path)
+while num_packets > num_sent and nx.has_path(H, src_node, dest_node):
+    path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+    for j in range(len(path)-1):
+        u, v = path[j], path[j+1]
+        H.nodes[u]['energy'] -= H[u][v]['weight']
+        if H.nodes[u]['energy'] < 0:
+            path_true = False
+            H.nodes[u]['energy'] += H[u][v]['weight']
+            H[u][v]['weight'] = 100000
+            break
+    if path_true:
+        num_sent += 1
+        print(path)
     else:
-        print("There is no path between the source and destination nodes.")
-        break
-   
-  
-           
+        path_true = True
+
+if num_sent == 0:
+    print("There is no path between the source and destination nodes.")
+
 node_energy = nx.get_node_attributes(H, 'energy')
 total_energy_after = sum(node_energy.values())
 print(f"Total energy of nodes after sending packets: {total_energy_after} joules")
@@ -92,37 +79,20 @@ print("Greedy:\n")
 
 
 if nx.has_path(G, src_node, dest_node):
-    print("The path exists")
     paths = list(nx.all_simple_paths(G, source=src_node, target=dest_node))
-    num_sent =0 
-    path_true = True
-    for i in range(num_packets):
+    num_sent = 0
+    while G.nodes[src_node]['energy'] > 0 and num_sent < num_packets:
         path = random.choice(paths)
-        if nx.has_path(G, src_node, dest_node):
-            for j in range(len(path)-1):
-                u, v = path[j], path[j+1]
-                G.nodes[u]['energy'] -= G[u][v]['weight']
-
-            for j in range(len(path)-1):
-                u, v = path[j], path[j+1]
-                if G.nodes[u]['energy'] < 0:
-                    path_true = False
-                    G.nodes[u]['energy'] += G[u][v]['weight']
-                    G[u][v]['weight'] = 100000
-            if not path_true:
-                path_true = True
-                if not nx.has_path(G, src_node, dest_node):
-                    print("There is no path between the source and destination nodes.")
-                else:
-                   filtered_paths = [p for p in paths if p != path]
-                   random_path = random.choice(filtered_paths)
-            else:
-                num_sent += 1
-                print(path)
+        for u, v in zip(path[:-1], path[1:]):
+            G.nodes[u]['energy'] -= G[u][v]['weight']
+            if G.nodes[u]['energy'] < 0:
+                for x, y in zip(path[:-1], path[1:]):
+                    G.nodes[x]['energy'] += G[x][y]['weight']
+                break
         else:
-            print("There is no path between the source and destination nodes.")
-            break
-               
+            num_sent += 1
+            print(path)
+
     node_energy = nx.get_node_attributes(G, 'energy')
     total_energy_after = sum(node_energy.values())
     print(f"Total energy of nodes after sending packets: {total_energy_after} joules")
@@ -139,3 +109,7 @@ if nx.has_path(G, src_node, dest_node):
     plt.show()
 else:
     print("There is no path between the source and destination nodes.")
+
+               
+    
+
