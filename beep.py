@@ -2,16 +2,18 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# Step 2: Create a graph with random edges
-num_nodes = int(input("Enter the number of nodes: "))
+edges = [
+    (0, 1, {"weight": 5}),
+    (0, 2, {"weight": 5}),
+    (1, 3, {"weight": 20}),
+    (2, 3, {"weight": 20}),
+    
+]
+
 G = nx.Graph()
-for i in range(1, num_nodes+1):
+for i in range(0,4):
     G.add_node(i, energy=200)
-for i in range(1, num_nodes+1):
-    for j in range(i+1, num_nodes+1):
-        if random.random() < 0.5:
-            weight = random.randint(5, 20)
-            G.add_edge(i, j, weight=weight)
+G.add_edges_from(edges)
 
 # Step 3: Display the initial graph with node energies as labels
 pos = nx.spring_layout(G)
