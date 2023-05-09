@@ -41,18 +41,22 @@ if nx.has_path(G, src_node, dest_node):
     H = G.copy()
     num_sent = 0
     while H.nodes[src_node]['energy'] > 0 and num_sent < num_packets:
-        path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
-        for u, v in zip(path[:-1], path[1:]):
-            w = H.nodes[u]['energy'] - H[u][v]['weight']
-            
-            if w < 0:
-                H[u][v]['weight'] = 100000
-                break
+        if nx.has_path(H, src_node, dest_node):
+            path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+            for u, v in zip(path[:-1], path[1:]):
+                w = H.nodes[u]['energy'] - H[u][v]['weight']
+                
+                if w < 0:
+                    H.remove_edge(u , v)
+                    break
+                else:
+                    H.nodes[u]['energy'] -= H[u][v]['weight']
             else:
-                H.nodes[u]['energy'] -= H[u][v]['weight']
+                num_sent += 1
+                print(path)
         else:
-            num_sent += 1
-            print(path)
+            print("There is no path between the source and destination nodes.")
+            break
 else:
     print("There is no path between the source and destination nodes.")
 
@@ -93,18 +97,25 @@ if nx.has_path(G, src_node, dest_node):
     paths = list(nx.all_simple_paths(G, source=src_node, target=dest_node))
     num_sent = 0
     while H.nodes[src_node]['energy'] > 0 and num_sent < num_packets:
-        path = random.choice(paths)
-        for u, v in zip(path[:-1], path[1:]):
-            w = H.nodes[u]['energy'] - H[u][v]['weight']
-            
-            if w < 0:
-                H[u][v]['weight'] = 100000
-                break
+        if nx.has_path(H, src_node, dest_node):
+            path = random.choice(paths) 
+            current_path = path
+            for u, v in zip(path[:-1], path[1:]):
+                w = H.nodes[u]['energy'] - H[u][v]['weight']
+                
+                if w < 0:
+                    H.remove_edge(u , v)
+                    paths = [p for p in nx.all_simple_paths(G, source=src_node, target=dest_node) if p != path]
+
+                    break
+                else:
+                    H.nodes[u]['energy'] -= H[u][v]['weight']
             else:
-                H.nodes[u]['energy'] -= H[u][v]['weight']
+                num_sent += 1
+                print(path)
         else:
-            num_sent += 1
-            print(path)
+            print("There is no path between the source and destination nodes.")
+            break
 else:
     print("There is no path between the source and destination nodes.")
 
