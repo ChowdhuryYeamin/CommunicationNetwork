@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 
 
 def create_graph():
-    # Step 2: Create a graph with random edges
+    # Create a graph with random edges
     num_nodes = int(input("Enter the number of nodes: "))
     G = nx.DiGraph()
-    for i in range(1, num_nodes+1):
+    for i in range(1,num_nodes+1):
         G.add_node(i, energy=200)
     for i in range(1, num_nodes+1):
         for j in range(i+1, num_nodes+1):
@@ -16,8 +16,6 @@ def create_graph():
                 G.add_edge(i, j, weight=weight, directed=True)
 
     return G
-
-    
 
 def display_graph(G):
     pos = nx.spring_layout(G)
@@ -137,19 +135,28 @@ def nonOptimal(G, src_node , dest_node , num_packets):
 if __name__ == '__main__':
     G = create_graph()
     display_graph(G)
-
+    
     # Step 4: Ask the user for the source and destination nodes and the number of packets to send
-    src_node = int(input("Enter the source node: "))
-    dest_node = int(input("Enter the destination node: "))
-    num_packets = int(input("Enter the number of packets to send: "))
+    while True:
+        choice = input("Press X to exit or any other key to continue: ")
+        if choice.upper() == "X":
+            break
 
-    if not nx.has_path(G, src_node, dest_node):
-        print("There is no path between the source and destination nodes. Please choose another path")
         src_node = int(input("Enter the source node: "))
         dest_node = int(input("Enter the destination node: "))
-        num_packets = int(input("Enter the number of packets to send: "))
+        
 
-    Dijkstra(G , src_node , dest_node , num_packets)
+        if nx.has_path(G, src_node, dest_node):
+            num_packets = int(input("Enter the number of packets to send: "))
+            Dijkstra(G , src_node , dest_node , num_packets)
     
-    display_graph(G)
-    nonOptimal(G , src_node , dest_node , num_packets)
+            display_graph(G)
+            nonOptimal(G , src_node , dest_node , num_packets)
+            break
+        else:
+            print("There is no path between the source and destination nodes. Please choose another path")
+            
+        
+
+    
+    
