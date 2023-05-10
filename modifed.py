@@ -12,7 +12,7 @@ def create_graph():
         (0, 3, {"weight": 35}),
     ]
 
-    G = nx.Graph()
+    G = nx.DiGraph()
     for i in range(0, 4):
         G.add_node(i, energy=200)
     G.add_edges_from(edges)
