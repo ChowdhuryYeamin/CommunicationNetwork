@@ -29,54 +29,67 @@ def display_graph(G):
 
 def Dijkstra(G, src_node , dest_node , num_packets):
     
-    print("Dijkstra:\n")
+    print("\nDijkstra:\n")
     total_energy_before = sum(nx.get_node_attributes(G, 'energy').values())
     print(f"Total energy of nodes before sending packets: {total_energy_before} joules")
 
+    node_energy = nx.get_node_attributes(G, 'energy')
+    print("Energies at nodes:" , node_energy)
 
     if nx.has_path(G, src_node, dest_node):
         H = G.copy()
         num_sent = 0
         
+        print("\n")
         while num_sent < num_packets :
             valid = True
             if nx.has_path(H, src_node, dest_node):
                 path = nx.shortest_path(H, src_node, dest_node, weight="weight", method="dijkstra")
+                
                 for u, v in zip(path[:-1], path[1:]):
-                    print(u , v)
+                    
                     if H.nodes[u]['energy'] < H[u][v]['weight']:
                         valid = False
-                        print( H.nodes[u]['energy'])
-                        print( H[u][v]['weight'])
-                        print("removing edge" , u , v)
+                        print("\nEnergy available at" , u,  ":" , H.nodes[u]['energy'])
+                        print("Energy required for " , u,  "to " , v , ":" , H[u][v]['weight'])
+                        print("Thus removing edge" , u , v)
+                        print("\n")
                         H.remove_edge(u , v)
                         break
                     
                 if valid == True:
-                    for u, v in zip(path[:-1], path[1:]):
-                        H.nodes[u]['energy'] -= H[u][v]['weight']
-                        print("energy " , u , ":", H.nodes[u]['energy'] )
                     num_sent += 1
-                    print(path)
+                    print("Path taken by packet ", num_sent , ":" ,path)
+                    for u, v in zip(path[:-1], path[1:]):
+                        
+                        H.nodes[u]['energy'] -= H[u][v]['weight']
+                        print("Energy " , u , ":", H.nodes[u]['energy'] , "     Energy required to send packet from" , u , "to" , v , ":" , H[u][v]['weight'] )
+                        
+                    
             else:
-                print("There is no path between the source and destination nodes.")
+                print("There is no path between the source and destination nodes.\n")
                 break
     else:
-        print("There is no path between the source and destination nodes.")
+        print("There is no path between the source and destination nodes.\n")
     
     node_energy = nx.get_node_attributes(H, 'energy')
     total_energy_after = sum(node_energy.values())
-    print(f"Total energy of nodes after sending packets: {total_energy_after} joules")
+    print(f"\nTotal energy of nodes after sending packets: {total_energy_after} joules")
 
     print("Packets sent before all paths with avaiable energy is exhausted:" , num_sent)
     display_graph(H)
 
 def nonOptimal(G, src_node , dest_node , num_packets):
-    print("Non-Optimal:\n")
+    print("\nNon-Optimal:\n")
 
     total_energy_before = sum(nx.get_node_attributes(G, 'energy').values())
     print(f"Total energy of nodes before sending packets: {total_energy_before} joules")
 
+    node_energy = nx.get_node_attributes(G, 'energy')
+    print("Energies at nodes:" , node_energy)
+    print("\n")
+
+           
     if nx.has_path(G, src_node, dest_node):
         num_sent = 0
         
@@ -87,21 +100,23 @@ def nonOptimal(G, src_node , dest_node , num_packets):
                 path = random.choice(paths) 
 
                 for u, v in zip(path[:-1], path[1:]):
-                    print(u , v)
+              
                     if G.nodes[u]['energy'] <  G[u][v]['weight']:
                         valid = False
-                        print( G.nodes[u]['energy'])
-                        print( G[u][v]['weight'])
-                        print("removing edge" , u , v)
+                        print("\nEnergy available at" , u,  ":" , G.nodes[u]['energy'])
+                        print("Energy required for " , u,  "to " , v , ":" , G[u][v]['weight'])
+                        print("Thus removing edge" , u , v)
+                        print("\n")
                         G.remove_edge(u , v)
                         break
 
                 if valid == True:
+                    num_sent += 1
+                    print("Path taken by packet ", num_sent , ":" ,path)
                     for u, v in zip(path[:-1], path[1:]):
                         G.nodes[u]['energy'] -= G[u][v]['weight']
-                        print("energy " , u , ":", G.nodes[u]['energy'] )
-                    num_sent += 1
-                    print(path)
+                        print("Energy " , u , ":", G.nodes[u]['energy'] , "     Energy required to send packet from" , u , "to" , v , ":" , G[u][v]['weight'] )
+                    
             else:
                 print("There is no path between the source and destination nodes.")
                 break
@@ -113,7 +128,7 @@ def nonOptimal(G, src_node , dest_node , num_packets):
                 
     node_energy = nx.get_node_attributes(G, 'energy')
     total_energy_after = sum(node_energy.values())
-    print(f"Total energy of nodes after sending packets: {total_energy_after} joules")
+    print(f"\nTotal energy of nodes after sending packets: {total_energy_after} joules")
 
     print("Packets sent before all paths with avaiable energy is exhausted:" , num_sent)
 
